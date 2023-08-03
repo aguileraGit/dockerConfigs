@@ -6,7 +6,8 @@ services:
         image: "ghcr.io/abetlen/llama-cpp-python:latest"
         container_name: llm
         network_mode: host
-        ports: 8000:8000
+        ports:
+            - 8000:8000
         volumes:
             - /home/diegoaguilera/llmModels:/models
         environment:
