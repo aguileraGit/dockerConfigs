@@ -1,49 +1,25 @@
 # JupyterLab
 Uses the standard (Jupyter Stacks)[https://jupyter-docker-stacks.readthedocs.io/en/latest/index.html].
-Specifically uses the scipy-notebook which matches most of the packages I normally use.
+Specifically uses the scipy-notebook which matches most of the packages I normally use. Additionally, pip packages can be specified to be installed after jupyterlab is installed.
 
-## Portainer
+## Installation flow
 To be able to add custom Pip packages, a Dockerfile needs to be created. Because the Dockerfile needs the network arguement, the flow to build this is more complicated.
 - Create jupyterlab directory in /opt directory
-- Copy docker-compose.yml to directory
-- Copy Dockerfile to directory
-- (Unsure if needed) Build the Dockerfile.
-- Build the container. In theory, this calls the dockerfile. However, I don't know how I would pass the network arguement.
+- Copy Dockerfile to directory (add/remove pip packages as needed)
+- Build the Dockerfile. (See instructions below)
+- Build the container using Portainer Stack using the docker-compose.yml file. The image name is specified and must match the -t arguement in docker build.
 
 ## Comments/Hints
-Docker maps the volume to a the /home/diegoaguilera/Projects folder on the local system. This must be created.
+Docker-compose maps the volume to a the /home/diegoaguilera/Projects folder on the local system. This must be created beforehand (I think).
 
-It also uses the user diegoaguilera and GID=1003. This can be gotten from the /etc/password file.
+It also uses the user diegoaguilera and GID=1003. This can be gotten from the /etc/password file. All files created in Jupyter will appear as if created by diegoaguilera and group.
 
-To install user pip packages, two files are needed: Compose (yaml) and Dockerfile. Place both files in the same directory.
+Additional pip packages can be added to the Dockerfile.
 
 ## Back ups (Still needs to be done).
 Still need a way to save (rsync) Projects folder to external drive. This should be broken down into 2 steps.
 1. Write udev rule to map external drive.
 2. Create cron job to sync folder
-
-## docker-compose.yml
-```
-version: '3.3'
-services:
-    jupyter-notebook:
-	build:
-	    context: .
-	    dockerfile: Dockerfile
-        ports:
-            - '8888:8888'
-        user: root
-        environment:
-            - NB_USER=diegoaguilera
-            - NB_GID=1003
-            - CHOWN_HOME=yes
-            - RESTARTABLE=yes
-        volumes:
-            - '/home/diegoaguilera/Projects:/home/diegoaguilera'
-        #image: jupyter/scipy-notebook:latest
-        network_mode: host
-        restart: unless-stopped
-```
 
 ## Dockerfile
 ```
@@ -56,9 +32,32 @@ RUN pip install plotly jupyter_ai huggingface_hub pillow
 #RUN jupyter labextension install @jupyterlab/toc
 ```
 ## Build Dockerfile
-**May not need to build. Maybe compose up will build?!**
 Build the Dockerfile first. I had to add --network=host. I believe I have some setting that isn't correct in Docker. Once a container is built, it doesn't have access to the internet unless I tell it to use the host network.
-```sudo docker build - < Dockerfile --network=host```
+The -t arguement sets the name. It must match the docker-compose.yml file. After running this, the image shows up in Portainer (under images).	
+```sudo docker build - < Dockerfile --network=host -t jupyterlabpluspipextras```
 
 ## Build Container
-Create container using ```docker compose up```.
+Use Portainer Stacks. Copy docker-compose.yml. No need to pull as you've built it in the step above.
+
+## docker-compose.yml
+```
+version: '3.3'
+services:
+  jupyter-notebook:
+    build: .
+    image: jupyterlabpluspipextras
+    ports:
+      - '8888:8888'
+    user: root
+    environment:
+      - NB_USER=diegoaguilera
+      - NB_GID=1003
+      - CHOWN_HOME=yes
+      - RESTARTABLE=yes
+    volumes:
+      - '/home/diegoaguilera/Projects:/home/diegoaguilera'
+    network_mode: host
+    restart: unless-stopped
+```
+
+
