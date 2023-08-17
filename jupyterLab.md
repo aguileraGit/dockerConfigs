@@ -16,11 +16,6 @@ It also uses the user diegoaguilera and GID=1003. This can be gotten from the /e
 
 Additional pip packages can be added to the Dockerfile.
 
-## Back ups (Still needs to be done).
-Still need a way to save (rsync) Projects folder to external drive. This should be broken down into 2 steps.
-1. Write udev rule to map external drive.
-2. Create cron job to sync folder
-
 ## Dockerfile
 ```
 FROM jupyter/scipy-notebook:latest
@@ -59,5 +54,48 @@ services:
     network_mode: host
     restart: unless-stopped
 ```
+## Back ups (Still needs to be done).
+This is a multistep process.
+- Prerequs
+- Create script to mount drive
+- Create udev rule to trigger script
+- Create script to back up folder to drive
+- Create cron job
+
+### Prerequisits
+- If using VM, ensure rule is configured to attach HD
+- Use udev rule to consistently indentify drive when plugged in and/or rebooting
+  - Many ways to do this. One way is to plug in the HD and run ```udevadm info -a -n /dev/sdb | less```
+  - Grab one or more ATTR to identify the device. Example: ATTRS{product}=="FreeAgent Go" or ATTRS{serial}=="2GE798MA"
+- Probably need to create the mount point in the script below.
+
+### Mount Script
+Save script in ```/usr/local/bin/mount_backup.sh```
+Script:
+```
+#!/bin/bash
+
+# Set your mount point
+MOUNT_POINT="/mnt/backup"
+
+# Mount the drive
+mount /dev/sdb1 $MOUNT_POINT
+
+# If needed, you might also want to specify a particular filesystem type
+# mount -t ext4 /dev/sdb1 $MOUNT_POINT
+```
+Make it executable: ```chmod +x /usr/local/bin/mount_backup.sh```
+ 
+### udev rules
+- Open or create /etc/udev/rules.d/99-mount-backup.rules
+- Add line: ACTION=="add", ATTRS{serial}=="2GE798MA, RUN+="/usr/local/bin/mount_backup.sh"
+
+### Reload udev rules
+udevadm control --reload-rules
+
+### Backup Script
+See: https://smarttech101.com/backup-and-restore-your-computer-using-rsync/ for some good settings
+
+### Cron Job
 
 
