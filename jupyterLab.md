@@ -1,5 +1,5 @@
 # JupyterLab
-Uses the standard (Jupyter Stacks)[https://jupyter-docker-stacks.readthedocs.io/en/latest/index.html].
+Uses the standard [Jupyter Stacks](https://jupyter-docker-stacks.readthedocs.io/en/latest/index.html).
 Specifically uses the scipy-notebook which matches most of the packages I normally use. Additionally, pip packages can be specified to be installed after jupyterlab is installed.
 
 ## Installation flow
